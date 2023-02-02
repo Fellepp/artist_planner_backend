@@ -14,11 +14,14 @@ import java.util.*
 class ArtistService() {
 
     private var artistDB = mutableListOf<Artist>()
+    private var concertDB = mutableListOf<Concert>()
 
     fun scrape(artists: List<String>): MutableList<Artist> {
+        artistDB = mutableListOf<Artist>()
+        concertDB = mutableListOf<Concert>()
 
         retrieveArtists@ for (artist in artists) {
-            var concertDB = mutableListOf<Concert>()
+            val localConcertDB = mutableListOf<Concert>()
 
             var onTour: Boolean = true
 
@@ -31,15 +34,16 @@ class ArtistService() {
             }
 
             for (concert in artistDoc) {
-                val concert: Concert = getConcerts(concert)
+                val concert: Concert = getConcerts(concert, artist)
 
                 println("\n${concert.getDate()}")
                 println("${concert.getCategory()} is held in ${concert.getCity()}, ${concert.getCountry()}")
                 println(concert.getEvent())
                 concertDB.add(concert)
+                localConcertDB.add(concert)
             }
 
-            artistDB.add(Artist(UUID.randomUUID(), artist, onTour, concertDB))
+            artistDB.add(Artist(UUID.randomUUID(), artist, onTour, localConcertDB))
         }
         return artistDB
 
@@ -73,19 +77,22 @@ class ArtistService() {
 
     }
 
-    private fun getConcerts(concert: Element): Concert {
+    private fun getConcerts(concert: Element, artist: String): Concert {
         // Get concert date
         val dateString: String = concert.attr("title")
         var date: Date? = null
 
-        dateString.split("-").forEach {
-            val (day, month, year) = it.split(" ").drop(1)
-            val monthInt = Month.valueOf(month.uppercase()).value;
-            date = SimpleDateFormat("dd MM yyyy").parse(listOf(day, monthInt, year).joinToString(" "))
-        }
-
         // Get concert type and location
         val category = concert.select("div.event-details").attr("class").split(" ")[1]
+
+
+        dateString.split("-").forEach {
+            println(it)
+            val (day, month, year) = it.split(" ").drop(1)
+            val monthInt = Month.valueOf(month.uppercase()).value;
+            val time = "12:00" //Ignore time
+            date = SimpleDateFormat("dd MM yyyy HH:mm").parse(listOf(day, monthInt, year, time).joinToString(" "))
+        }
 
         val locationList =
             concert.select("div.event-details").select("strong.primary-detail").text().split(",")
@@ -93,20 +100,17 @@ class ArtistService() {
         val country = locationList.last().trim()
         val event = concert.select("div.event-details").select("p.secondary-detail").text()
 
-        return Concert(UUID.randomUUID(), event, date!!, category, city, country)
+        return Concert(UUID.randomUUID(), event, date!!, category, city, country, artist)
     }
 
-    fun getConcertsByCity(city: String) {
-        println("\nConcerts in $city")
-        for (artist in artistDB) {
-            for (concert in artist.getConcerts()) {
-                if (concert.getCity() == city) {
-                    println(artist.getName())
-                    println(concert.getDate())
-                    println(concert.getEvent())
-                }
-            }
+    fun getConcertsByCity(city: String): List<Concert> {
+        return concertDB.filter {
+            it.getCity() == city
         }
+    }
+
+    fun getConcertsGlobal(): List<Concert> {
+        return concertDB
     }
 
 }

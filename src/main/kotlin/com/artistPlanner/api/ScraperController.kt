@@ -7,20 +7,18 @@ import jakarta.validation.constraints.NotBlank
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.*
 import java.text.SimpleDateFormat
 import java.time.Month
 import java.util.*
 
 
-@RequestMapping("api/v1/scrape")
+@RequestMapping("api/v1")
 @RestController
+@CrossOrigin
 class ScraperController(@Autowired val artistService: ArtistService) {
 
-    @GetMapping
+    @GetMapping(path = ["/scrape"])
     fun scrape(): MutableList<Artist> {
         // List of artists to search on
         val artists =
@@ -41,7 +39,10 @@ class ScraperController(@Autowired val artistService: ArtistService) {
         return artistService.scrape(artists)
     }
 
-    @GetMapping(path = ["{city}"])
+    @GetMapping(path = ["/city/{city}"])
     fun getConcertsByCity(@PathVariable("city") city: String) = artistService.getConcertsByCity(city)
+
+    @GetMapping(path = ["/global"])
+    fun getConcertsGlobal() = artistService.getConcertsGlobal()
 
 }

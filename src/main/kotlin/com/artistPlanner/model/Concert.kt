@@ -9,6 +9,7 @@ class Concert(
     private val category: String,
     private val city: String,
     private val country: String,
+    private val artist: String
 ) {
 
     fun getId() : UUID = id
@@ -22,4 +23,6 @@ class Concert(
     fun getCity() : String = city
 
     fun getCountry() : String = country
+
+    fun getArtist() : String = artist
 }
