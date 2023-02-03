@@ -1,15 +1,9 @@
 package com.artistPlanner.api
 
 import com.artistPlanner.model.Artist
-import com.artistPlanner.model.Concert
 import com.artistPlanner.service.ArtistService
-import jakarta.validation.constraints.NotBlank
-import org.jsoup.Jsoup
-import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import java.text.SimpleDateFormat
-import java.time.Month
 import java.util.*
 
 
@@ -34,7 +28,12 @@ class ScraperController(@Autowired val artistService: ArtistService) {
                 "Five finger death punch",
                 "Ice Nine Kills",
                 "Nightwish",
-                "Skillet"
+                "Skillet",
+                "Iron Maiden",
+                "+=!¤!??",
+                "I Prevail",
+                "",
+                "Sabaton"
             )
         return artistService.scrape(artists)
     }
