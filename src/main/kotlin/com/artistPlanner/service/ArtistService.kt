@@ -1,6 +1,5 @@
 package com.artistPlanner.service
 
-import com.artistPlanner.model.Artist
 import com.artistPlanner.model.Concert
 import com.google.gson.Gson
 import org.jsoup.Jsoup
@@ -12,11 +11,205 @@ import java.text.SimpleDateFormat
 import java.time.Month
 import java.util.*
 
+val COUNTRY_TO_CONTINENT = mapOf<String, String>(
+    "Algeria" to "Africa",
+    "Angola" to "Africa",
+    "Benin" to "Africa",
+    "Botswana" to "Africa",
+    "Burkina" to "Africa",
+    "Burundi" to "Africa",
+    "Cameroon" to "Africa",
+    "Cape Verde" to "Africa",
+    "Central African Republic" to "Africa",
+    "Chad" to "Africa",
+    "Comoros" to "Africa",
+    "Congo" to "Africa",
+    "Djibouti" to "Africa",
+    "Egypt" to "Africa",
+    "Equatorial Guinea" to "Africa",
+    "Eritrea" to "Africa",
+    "Ethiopia" to "Africa",
+    "Gabon" to "Africa",
+    "Gambia" to "Africa",
+    "Ghana" to "Africa",
+    "Guinea" to "Africa",
+    "Guinea-Bissau" to "Africa",
+    "Ivory Coast" to "Africa",
+    "Kenya" to "Africa",
+    "Lesotho" to "Africa",
+    "Liberia" to "Africa",
+    "Libya" to "Africa",
+    "Madagascar" to "Africa",
+    "Malawi" to "Africa",
+    "Mali" to "Africa",
+    "Mauritania" to "Africa",
+    "Mauritius" to "Africa",
+    "Morocco" to "Africa",
+    "Mozambique" to "Africa",
+    "Namibia" to "Africa",
+    "Niger" to "Africa",
+    "Nigeria" to "Africa",
+    "Rwanda" to "Africa",
+    "Sao Tome and Principe" to "Africa",
+    "Senegal" to "Africa",
+    "Seychelles" to "Africa",
+    "Sierra Leone" to "Africa",
+    "Somalia" to "Africa",
+    "South Africa" to "Africa",
+    "South Sudan" to "Africa",
+    "Sudan" to "Africa",
+    "Swaziland" to "Africa",
+    "Tanzania" to "Africa",
+    "Togo" to "Africa",
+    "Tunisia" to "Africa",
+    "Uganda" to "Africa",
+    "Zambia" to "Africa",
+    "Zimbabwe" to "Africa",
+    "Afghanistan" to "Asia",
+    "Bahrain" to "Asia",
+    "Bangladesh" to "Asia",
+    "Bhutan" to "Asia",
+    "Brunei" to "Asia",
+    "Burma (Myanmar)" to "Asia",
+    "Cambodia" to "Asia",
+    "China" to "Asia",
+    "East Timor" to "Asia",
+    "India" to "Asia",
+    "Indonesia" to "Asia",
+    "Iran" to "Asia",
+    "Iraq" to "Asia",
+    "Israel" to "Asia",
+    "Japan" to "Asia",
+    "Jordan" to "Asia",
+    "Kazakhstan" to "Asia",
+    "Korea" to "Asia",
+    "Kuwait" to "Asia",
+    "Kyrgyzstan" to "Asia",
+    "Laos" to "Asia",
+    "Lebanon" to "Asia",
+    "Malaysia" to "Asia",
+    "Maldives" to "Asia",
+    "Mongolia" to "Asia",
+    "Nepal" to "Asia",
+    "Oman" to "Asia",
+    "Pakistan" to "Asia",
+    "Philippines" to "Asia",
+    "Qatar" to "Asia",
+    "Russian Federation" to "Asia",
+    "Saudi Arabia" to "Asia",
+    "Singapore" to "Asia",
+    "Sri Lanka" to "Asia",
+    "Syria" to "Asia",
+    "Tajikistan" to "Asia",
+    "Thailand" to "Asia",
+    "Turkey" to "Asia",
+    "Turkmenistan" to "Asia",
+    "United Arab Emirates" to "Asia",
+    "Uzbekistan" to "Asia",
+    "Vietnam" to "Asia",
+    "Yemen" to "Asia",
+    "Albania" to "Europe",
+    "Andorra" to "Europe",
+    "Armenia" to "Europe",
+    "Austria" to "Europe",
+    "Azerbaijan" to "Europe",
+    "Belarus" to "Europe",
+    "Belgium" to "Europe",
+    "Bosnia and Herzegovina" to "Europe",
+    "Bulgaria" to "Europe",
+    "Croatia" to "Europe",
+    "Cyprus" to "Europe",
+    "CZ" to "Europe",
+    "Denmark" to "Europe",
+    "Estonia" to "Europe",
+    "Finland" to "Europe",
+    "France" to "Europe",
+    "Georgia" to "Europe",
+    "Germany" to "Europe",
+    "Greece" to "Europe",
+    "Hungary" to "Europe",
+    "Iceland" to "Europe",
+    "Ireland" to "Europe",
+    "Italy" to "Europe",
+    "Latvia" to "Europe",
+    "Liechtenstein" to "Europe",
+    "Lithuania" to "Europe",
+    "Luxembourg" to "Europe",
+    "Macedonia" to "Europe",
+    "Malta" to "Europe",
+    "Moldova" to "Europe",
+    "Monaco" to "Europe",
+    "Montenegro" to "Europe",
+    "Netherlands" to "Europe",
+    "Norway" to "Europe",
+    "Poland" to "Europe",
+    "Portugal" to "Europe",
+    "Romania" to "Europe",
+    "San Marino" to "Europe",
+    "Serbia" to "Europe",
+    "Slovakia" to "Europe",
+    "Slovenia" to "Europe",
+    "Spain" to "Europe",
+    "Sweden" to "Europe",
+    "Switzerland" to "Europe",
+    "Ukraine" to "Europe",
+    "UK" to "Europe",
+    "Vatican City" to "Europe",
+    "Antigua and Barbuda" to "North America",
+    "Bahamas" to "North America",
+    "Barbados" to "North America",
+    "Belize" to "North America",
+    "Canada" to "North America",
+    "Costa Rica" to "North America",
+    "Cuba" to "North America",
+    "Dominica" to "North America",
+    "Dominican Republic" to "North America",
+    "El Salvador" to "North America",
+    "Grenada" to "North America",
+    "Guatemala" to "North America",
+    "Haiti" to "North America",
+    "Honduras" to "North America",
+    "Jamaica" to "North America",
+    "Mexico" to "North America",
+    "Nicaragua" to "North America",
+    "Panama" to "North America",
+    "Saint Kitts and Nevis" to "North America",
+    "Saint Lucia" to "North America",
+    "Saint Vincent and the Grenadines" to "North America",
+    "Trinidad and Tobago" to "North America",
+    "US" to "North America",
+    "Australia" to "Oceania",
+    "Fiji" to "Oceania",
+    "Kiribati" to "Oceania",
+    "Marshall Islands" to "Oceania",
+    "Micronesia" to "Oceania",
+    "Nauru" to "Oceania",
+    "New Zealand" to "Oceania",
+    "Palau" to "Oceania",
+    "Papua New Guinea" to "Oceania",
+    "Samoa" to "Oceania",
+    "Solomon Islands" to "Oceania",
+    "Tonga" to "Oceania",
+    "Tuvalu" to "Oceania",
+    "Vanuatu" to "Oceania",
+    "Argentina" to "South America",
+    "Bolivia" to "South America",
+    "Brazil" to "South America",
+    "Chile" to "South America",
+    "Colombia" to "South America",
+    "Ecuador" to "South America",
+    "Guyana" to "South America",
+    "Paraguay" to "South America",
+    "Peru" to "South America",
+    "Suriname" to "South America",
+    "Uruguay" to "South America",
+    "Venezuela" to "South America",
+    "Czech Republic" to "Europe"
+)
 
 @Service
 class ArtistService() {
     var artistCodes = mutableMapOf<String, String>()
-    private var artistDB = mutableListOf<Artist>()
     private var concertDB = mutableListOf<Concert>()
 
     private fun initArtistCodes() = File("artist_codes.json")
@@ -36,11 +229,9 @@ class ArtistService() {
         file.writeText(json)
     }
 
-    fun scrape(artists: List<String>): MutableList<Artist> {
+    fun scrape(artists: List<String>): MutableList<Concert> {
 
         artistCodes = initArtistCodes()
-
-        artistDB = mutableListOf()
         concertDB = mutableListOf()
 
         retrieveArtists@ for (artist in artists) {
@@ -62,12 +253,9 @@ class ArtistService() {
                 concertDB.add(concert)
                 localConcertDB.add(concert)
             }
-
-            artistDB.add(Artist(UUID.randomUUID(), artist, onTour, localConcertDB))
         }
         saveToArtistCodes()
-        return artistDB
-
+        return concertDB
     }
 
     private fun getArtist(artist: String): Elements? {
@@ -125,17 +313,33 @@ class ArtistService() {
         val country = locationList.last().trim()
         val event = concert.select("div.event-details").select("p.secondary-detail").text()
 
-        return Concert(UUID.randomUUID(), event, date!!, category, city, country, artist)
+        println("\n$artist")
+        println(event)
+        println(date)
+        println(city)
+        println(country)
+        println(getContinentFromCountry(country))
+
+        return Concert(
+            UUID.randomUUID(),
+            event,
+            date!!,
+            category,
+            city,
+            country,
+            getContinentFromCountry(country)!!,
+            artist
+        )
     }
 
-    fun getConcertsByCity(city: String): List<Concert> {
-        return concertDB.filter {
-            it.getCity() == city
-        }
-    }
+    private fun getContinentFromCountry(country: String) = COUNTRY_TO_CONTINENT[country]
 
-    fun getConcertsGlobal(): List<Concert> {
-        return concertDB
-    }
+    fun getConcertsGlobal(): List<Concert> = concertDB
+    fun getConcertsByContinent(continent: String): List<Concert> = concertDB.filter { it.getContinent() == continent }
+    fun getConcertsByCountry(country: String): List<Concert> = concertDB.filter { it.getCountry() == country }
+    fun getConcertsByCity(city: String): List<Concert> = concertDB.filter { it.getCity() == city }
+    fun getConcertsByArtist(artist: String): List<Concert> = concertDB.filter { it.getArtist() == artist }
+    fun getConcertsByContinentAndArtist(continent: String, artist: String): List<Concert> =
+        concertDB.filter { it.getContinent() == continent && it.getArtist() == artist }
 
 }
