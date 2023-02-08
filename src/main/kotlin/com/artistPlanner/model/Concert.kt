@@ -9,6 +9,7 @@ class Concert(
     private val category: String,
     private val city: String,
     private val country: String,
+    private val continent: String,
     private val artist: String
 ) {
 
@@ -23,6 +24,8 @@ class Concert(
     fun getCity() : String = city
 
     fun getCountry() : String = country
+
+    fun getContinent() : String = continent
 
     fun getArtist() : String = artist
 }
