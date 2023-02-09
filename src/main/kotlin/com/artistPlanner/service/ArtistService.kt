@@ -249,9 +249,11 @@ class ArtistService() {
 
             // Loops through all concerts for artist
             for (concert in artistDoc) {
-                val concert: Concert = getConcerts(concert, artist)
-                concertDB.add(concert)
-                localConcertDB.add(concert)
+                val concert: MutableList<Concert> = getConcerts(concert, artist)
+                for (concerts in concert) {
+                    concertDB.add(concerts)
+                    localConcertDB.add(concerts)
+                }
             }
         }
         saveToArtistCodes()
@@ -291,21 +293,37 @@ class ArtistService() {
 
     }
 
-    private fun getConcerts(concert: Element, artist: String): Concert {
+    private fun getConcerts(concert: Element, artist: String): MutableList<Concert> {
         // Get concert date
         val dateString: String = concert.attr("title")
-        var date: Date? = null
+        var date: MutableList<Date> = mutableListOf()
 
         // Get concert type and location
         val category = concert.select("div.event-details").attr("class").split(" ")[1]
 
 
-        dateString.split("-").forEach {
-            val (day, month, year) = it.split(" ").drop(1)
-            val monthInt = Month.valueOf(month.uppercase()).value;
-            val time = "12:00" //Ignore time
-            date = SimpleDateFormat("dd MM yyyy HH:mm").parse(listOf(day, monthInt, year, time).joinToString(" "))
+        val cal: Calendar = Calendar.getInstance()
+        val time = "12:00" //Ignore time
+
+        val (lastDay, lastMonth, lastYear) = dateString.split(" – ").last().split(" ").drop(1)
+        var monthInt = Month.valueOf(lastMonth.uppercase()).value;
+        val toDate = SimpleDateFormat("dd MM yyyy HH:mm").parse(listOf(lastDay, monthInt, lastYear, time).joinToString(" "))
+
+
+        var (firstDay, firstMonth, firstYear) = dateString.split(" – ").first().split(" ").drop(1)
+        monthInt = Month.valueOf(firstMonth.uppercase()).value;
+        val fromDate = SimpleDateFormat("dd MM yyyy HH:mm").parse(listOf(firstDay, monthInt, firstYear, time).joinToString(" "))
+
+
+        var lastDate : Calendar = Calendar.getInstance()
+        lastDate.time = toDate
+        cal.time = fromDate
+
+        while( cal.before(lastDate) ) {
+            date.add(cal.time)
+            cal.add(Calendar.DATE, 1)
         }
+        date.add(lastDate.time)
 
         val locationList =
             concert.select("div.event-details").select("strong.primary-detail").text().split(",")
@@ -313,23 +331,23 @@ class ArtistService() {
         val country = locationList.last().trim()
         val event = concert.select("div.event-details").select("p.secondary-detail").text()
 
-        println("\n$artist")
-        println(event)
-        println(date)
-        println(city)
-        println(country)
-        println(getContinentFromCountry(country))
+        val concertRes: MutableList<Concert> = mutableListOf()
 
-        return Concert(
-            UUID.randomUUID(),
-            event,
-            date!!,
-            category,
-            city,
-            country,
-            getContinentFromCountry(country)!!,
-            artist
-        )
+        for (dates in date) {
+            concertRes.add(
+                Concert(
+                    UUID.randomUUID(),
+                    event,
+                    dates,
+                    category,
+                    city,
+                    country,
+                    getContinentFromCountry(country)!!,
+                    artist
+                )
+            )
+        }
+        return concertRes
     }
 
     private fun getContinentFromCountry(country: String) = COUNTRY_TO_CONTINENT[country]
